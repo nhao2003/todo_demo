@@ -16,6 +16,8 @@ const validateTodo = [
     body('title').isString().isLength({ min: 1 }),
     body('description').isString().isLength({ min: 1 }),
     body('done').isBoolean(),
+    body('priority').isString().isIn(['low', 'medium', 'high']),
+    body('time').isString().isISO8601(),
     ];
     
 

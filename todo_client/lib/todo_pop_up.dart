@@ -23,7 +23,8 @@ class _AddEditTodoScreenState extends State<AddEditTodoScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   bool _done = false;
-
+  Priority _priority = Priority.low;
+  DateTime? _time;
   @override
   void initState() {
     super.initState();
@@ -57,7 +58,9 @@ class _AddEditTodoScreenState extends State<AddEditTodoScreen> {
                 title: _titleController.text,
                 description: _descriptionController.text,
                 done: _done,
-                createdAt: DateTime.now(),
+                priority: _priority,
+                time: _time,
+                createdAt: widget.todo?.createdAt ?? DateTime.now(),
               );
               Navigator.of(context).pop<TodoPopupResult>(
                   TodoPopupResult(todo: todo, isNew: widget.todo == null));
@@ -70,6 +73,7 @@ class _AddEditTodoScreenState extends State<AddEditTodoScreen> {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextField(
@@ -85,6 +89,57 @@ class _AddEditTodoScreenState extends State<AddEditTodoScreen> {
                 maxLines: 10,
               ),
               const SizedBox(height: 8),
+              //ComboBox
+              DropdownButtonFormField<Priority>(
+                decoration: const InputDecoration(
+                  labelText: 'Priority',
+                  border: OutlineInputBorder(),
+                ),
+                value: _priority,
+                onChanged: (Priority? value) {
+                  setState(() {
+                    _priority = value ?? Priority.low;
+                  });
+                },
+                items: Priority.values
+                    .map((Priority priority) => DropdownMenuItem<Priority>(
+                          value: priority,
+                          child: Text(priority.dislayName),
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 8),
+              //DateTimePicker
+              ElevatedButton(
+                onPressed: () async {
+                  final DateTime? time = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                  );
+                  if (time != null) {
+                    final TimeOfDay? pickedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (pickedTime != null) {
+                      setState(() {
+                        _time = DateTime(
+                          time.year,
+                          time.month,
+                          time.day,
+                          pickedTime.hour,
+                          pickedTime.minute,
+                        );
+                      });
+                    }
+                  }
+                },
+                child: Text(_time == null
+                    ? 'Pick Time'
+                    : 'Time: ${_time!.toLocal().toString()}'),
+              ),
               const SizedBox(height: 8),
               CheckboxListTile(
                 title: const Text('Done'),

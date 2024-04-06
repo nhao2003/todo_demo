@@ -23,7 +23,7 @@ class TodoService {
 
   async getAllTodos() {
     try {
-      return await this.collection.find().toArray();
+      return await this.collection.find().sort().toArray();
     } catch (err) {
       console.error("Error fetching todos:", err);
       throw new Error("Failed to fetch todos");
@@ -46,8 +46,11 @@ class TodoService {
   async createTodo(todo) {
     try {
       const result = await this.collection.insertOne({
-        ...todo,
+        title: todo.title,
+        description: todo.description,
+        priority: todo.priority,
         done: false,
+        time: todo.time !== null ? new Date(todo.time) : null,
         createdAt: new Date(),
       });
       return result.insertedId;
@@ -78,7 +81,7 @@ class TodoService {
     try {
       const result = await this.collection.deleteOne({ _id: new ObjectId(id) });
       if (result.deletedCount === 0) {
-        throw new Error("Todo not found");
+        console.error("Todo not found");
       }
       return { message: "Todo deleted successfully" };
     } catch (err) {

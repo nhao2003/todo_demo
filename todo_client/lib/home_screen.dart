@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text('Todo List'),
+          title: const Text('Todo List'),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary),
       body: FutureBuilder<List<Todo>>(
           future: _todoRepository.fetchTodos(),
@@ -62,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
             todos.clear();
             todos.addAll(snapshot.data!);
             return ListView.builder(
+              key: UniqueKey(),
               itemCount: todos.length,
               itemBuilder: (BuildContext context, int index) {
                 final todo = snapshot.data![index];
@@ -70,8 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     motion: const ScrollMotion(),
                     children: [
                       SlidableAction(
-                        onPressed: (context) {
-                          _todoRepository.deleteTodo(todo);
+                        onPressed: (context) async {
+                          await _todoRepository.deleteTodo(todo);
                           setState(() {});
                         },
                         label: 'Delete',
@@ -80,15 +81,44 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   child: ListTile(
-                    title: Text(todo.title),
-                    subtitle: Text(todo.description),
-                    trailing: Checkbox(
+                    title: Text(todo.title,
+                        style: TextStyle(
+                          decoration:
+                              todo.done ? TextDecoration.lineThrough : null,
+                        )),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(todo.description, maxLines: 1),
+                        todo.time != null
+                            ? Text(
+                                '${todo.time!.hour}:${todo.time!.minute} ${todo.time!.day}/${todo.time!.month}/${todo.time!.year}')
+                            : const SizedBox.shrink(),
+                      ],
+                    ),
+                    leading: Checkbox(
                       value: todo.done,
                       onChanged: (bool? value) async {
                         todo.done = value!;
                         await _todoRepository.updateTodo(todo);
                         setState(() {});
                       },
+                    ),
+                    // Priority
+                    trailing: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: todo.priority == Priority.low
+                            ? Colors.green
+                            : todo.priority == Priority.medium
+                                ? Colors.orange
+                                : Colors.red,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        todo.priority.dislayName,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
                     onTap: () async {
                       await openAddTodoPopup(todo);
@@ -103,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
           await openAddTodoPopup(null);
         },
         tooltip: 'Add Todo',
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

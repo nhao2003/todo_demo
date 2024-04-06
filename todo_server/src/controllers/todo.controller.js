@@ -8,7 +8,8 @@ class TodoController {
   async getAllTodos(req, res) {
     try {
       await this.todoService.connect();
-      const todos = await this.todoService.getAllTodos();
+      const sortBy = req.query.sortBy;
+      const todos = await this.todoService.getAllTodos(sortBy);
       res.json(todos);
     } catch (err) {
       console.error("Error:", err.message);
